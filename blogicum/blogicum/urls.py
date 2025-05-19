@@ -33,5 +33,12 @@ urlpatterns = [
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
+
+
 handler404 = 'pages.views.custom_404'
 handler500 = 'pages.views.custom_500'

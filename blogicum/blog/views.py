@@ -113,7 +113,6 @@ class PostEditView(UpdateView):
 
 class PostDeleteView(LoginRequiredMixin, DeleteView):
     model = Post
-    form_class = PostForm
     template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
 
