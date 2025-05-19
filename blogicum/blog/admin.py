@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Category, Location
+from .models import Comment, Post, Category, Location
 
 
 @admin.register(Post)
@@ -26,3 +26,9 @@ class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_published')
     search_fields = ('name',)
     list_filter = ('is_published',)
+
+
+@admin.register(Comment)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ('text', 'author')
+    search_fields = ('author',)

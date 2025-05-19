@@ -1,10 +1,13 @@
-from . import views
 from django.urls import path
-
+from . import views
 app_name = "blog"
 
-urlpatterns = [
-    path('', views.PostListView.as_view(), name='index'),
+urlpatterns_posts = [
+    path(
+        '',
+        views.PostListView.as_view(),
+        name='index'
+    ),
     path(
         'posts/create/',
         views.CreatePostView.as_view(),
@@ -17,21 +20,22 @@ urlpatterns = [
     ),
     path(
         'posts/<int:post_id>/edit/',
-        views.PostEditView.as_view(),
+        views.EditPostView.as_view(),
         name='edit_post'
     ),
     path(
         'posts/<int:post_id>/delete/',
-        views.PostDeleteView.as_view(),
+        views.DeletePostView.as_view(),
         name='delete_post'
     ),
-    path('category/<slug:category_slug>/',
-         views.CategoryPostView.as_view(), name='category_posts'),
     path(
-        'profile/edit/',
-        views.ProfileEditView.as_view(),
-        name='edit_profile'
+        'category/<slug:category_slug>/',
+        views.CategoryPostView.as_view(),
+        name='category_posts'
     ),
+]
+
+urlpatterns_comments = [
     path(
         'posts/<int:post_id>/comment/',
         views.CreateCommentView.as_view(),
@@ -47,10 +51,19 @@ urlpatterns = [
         views.DeleteCommentView.as_view(),
         name='delete_comment'
     ),
+]
+
+urlpatterns_profile = [
+    path(
+        'profile/edit/',
+        views.EditProfileView.as_view(),
+        name='edit_profile'
+    ),
     path(
         'profile/<slug:username>/',
         views.ProfileDetailView.as_view(),
         name='profile'
     ),
-
 ]
+
+urlpatterns = urlpatterns_posts + urlpatterns_comments + urlpatterns_profile
