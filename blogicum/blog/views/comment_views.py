@@ -12,6 +12,7 @@ User = get_user_model()
 
 class BaseCommentMixin(LoginRequiredMixin):
     model = Comment
+    form_class = CommentForm
 
     def get_success_url(self):
         return reverse(
@@ -29,8 +30,6 @@ class CommentQueryMixin:
 
 
 class CreateCommentView(BaseCommentMixin, CreateView):
-    form_class = CommentForm
-
     def form_valid(self, form):
         form.instance.author = self.request.user
         post_id = self.kwargs.get('post_id')
@@ -39,7 +38,7 @@ class CreateCommentView(BaseCommentMixin, CreateView):
 
 
 class EditCommentView(BaseCommentMixin, CommentQueryMixin, UpdateView):
-    form_class = CommentForm
+    pass
 
 
 class DeleteCommentView(BaseCommentMixin, CommentQueryMixin, DeleteView):
