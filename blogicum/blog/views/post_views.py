@@ -14,6 +14,27 @@ from ..utils import filter_posts, filter_posts_for_reader
 User = get_user_model()
 
 
+class ProfileRedirectMixin(LoginRequiredMixin):
+    def get_success_url(self):
+        return reverse(
+            'blog:profile',
+            kwargs={'username': self.request.user.username}
+        )
+
+
+class PostWriteMixin:
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/create.html'
+    pk_url_kwarg = 'post_id'
+
+
+class CreatePostView(ProfileRedirectMixin, PostWriteMixin, CreateView):
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
 class PostListView(ListView):
     model = Post
     paginate_by = settings.POSTS_PER_PAGE
@@ -31,7 +52,10 @@ class CategoryPostView(ListView):
     def get_queryset(self):
         category_slug = self.kwargs.get('category_slug')
         category = get_object_or_404(
-            Category, slug=category_slug, is_published=True)
+            Category,
+            slug=category_slug,
+            is_published=True
+        )
         self.category = category
         queryset = super().get_queryset()
         queryset = filter_posts_for_reader(
@@ -73,28 +97,7 @@ class PostDetailView(DetailView):
         return context
 
 
-class CreatePostView(LoginRequiredMixin, CreateView):
-    model = Post
-    form_class = PostForm
-    template_name = 'blog/create.html'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse(
-            'blog:profile',
-            kwargs={'username': self.request.user.username}
-        )
-
-
-class EditPostView(UpdateView):
-    model = Post
-    form_class = PostForm
-    template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
-
+class EditPostView(PostWriteMixin, UpdateView):
     def get_queryset(self):
         return Post.objects.all()
 
@@ -111,17 +114,6 @@ class EditPostView(UpdateView):
         )
 
 
-class DeletePostView(LoginRequiredMixin, DeleteView):
-    model = Post
-    form_class = PostForm
-    template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
-
+class DeletePostView(ProfileRedirectMixin, PostWriteMixin, DeleteView):
     def get_queryset(self):
         return self.request.user.posts
-
-    def get_success_url(self):
-        return reverse(
-            'blog:profile',
-            kwargs={'username': self.request.user.username}
-        )
