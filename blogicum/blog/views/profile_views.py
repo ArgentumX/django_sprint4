@@ -20,8 +20,10 @@ class ProfileDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         profile = self.get_object()
 
+        posts = profile.posts
+        posts = posts.select_related('author', 'category', 'location')
         posts = filter_posts(
-            profile.posts,
+            posts,
             for_author=(profile == self.request.user)
         )
 

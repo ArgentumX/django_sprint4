@@ -43,5 +43,12 @@ def filter_posts(
 ) -> list[Post]:
     if for_author:
         return filter_posts_for_author(queryset, **kwargs)
-    else:
-        return filter_posts_for_reader(queryset, **kwargs)
+    return filter_posts_for_reader(queryset, **kwargs)
+
+
+def is_available(post: Post) -> bool:
+    return (
+        post.is_published
+        and post.pub_date <= timezone.now()
+        and post.category and post.category.is_published
+    )

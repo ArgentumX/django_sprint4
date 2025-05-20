@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from blogicum import settings
 
@@ -9,7 +10,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, \
 
 from ..forms import CommentForm, PostForm
 from ..models import Category, Post
-from ..utils import filter_posts, filter_posts_for_reader
+from ..utils import filter_posts_for_reader, is_available
 
 User = get_user_model()
 
@@ -41,7 +42,9 @@ class PostListView(ListView):
     template_name = 'blog/index.html'
 
     def get_queryset(self):
-        return filter_posts_for_reader(super().get_queryset())
+        queryset = super().get_queryset()
+        queryset = queryset.select_related('author', 'location', 'category')
+        return filter_posts_for_reader(queryset)
 
 
 class CategoryPostView(ListView):
@@ -57,7 +60,10 @@ class CategoryPostView(ListView):
             is_published=True
         )
         self.category = category
+
         queryset = super().get_queryset()
+        queryset = queryset.select_related('author', 'location', 'category')
+
         queryset = filter_posts_for_reader(
             queryset=queryset,
             category=category
@@ -79,17 +85,25 @@ class PostDetailView(DetailView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        post_id = self.kwargs.get('post_id')
-        obj = get_object_or_404(queryset, pk=post_id)
-        return filter_posts(
-            queryset,
-            for_author=(obj.author == self.request.user)
-        )
+        queryset = queryset.select_related('author', 'location', 'category')
+        return queryset
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        if (
+            not is_available(obj)
+            and not (
+                self.request.user.is_authenticated
+                and obj.author == self.request.user
+            )
+        ):
+            raise Http404()
+        return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = self.object
-        comments = post.comments.all()
+        comments = post.comments.all().select_related('author')
         context.update({
             'form': CommentForm(),
             'comments': comments
